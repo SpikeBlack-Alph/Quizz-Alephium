@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Quiz Alephium</title>
+<style>
+  :root{
+    --bg:#0d1117;
+    --card:#161b22;
+    --accent:#00d4a0;
+    --accent-dark:#00a37a;
+    --accent2:#3fd1ff;
+    --text:#e6edf3;
+    --muted:#8b949e;
+    --wrong:#f85149;
+    --border:#30363d;
+    --alpha:#ffb020;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(0,212,160,.08), transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(63,209,255,.08), transparent 40%),
+      linear-gradient(160deg,#0d1117,#0c1220);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px;
+  }
+  .container{
+    width:100%;
+    max-width:660px;
+  }
+  .top-row{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:12px;
+    gap:6px;
+  }
+  .lang-btn{
+    background:#0d1117;
+    border:1px solid var(--border);
+    color:var(--muted);
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:.78rem;
+    font-weight:700;
+    cursor:pointer;
+    letter-spacing:.03em;
+    transition:all .15s ease;
+  }
+  .lang-btn:hover{border-color:var(--accent);color:var(--text);}
+  .lang-btn.active{
+    background:rgba(0,212,160,.14);
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  header{
+    text-align:center;
+    margin-bottom:20px;
+  }
+  .title-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  header h1{
+    font-size:1.8rem;
+    margin:0;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .alpha-badge{
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:20px;
+    background:rgba(255,176,32,.14);
+    color:var(--alpha);
+    font-weight:800;
+    font-size:.68rem;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    border:1px solid rgba(255,176,32,.45);
+    white-space:nowrap;
+  }
+  header p{
+    color:var(--muted);
+    margin:6px 0 0;
+    font-size:0.95rem;
+  }
+  .meta-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    font-size:.78rem;
+    color:var(--muted);
+    letter-spacing:.03em;
+  }
+  .category-tag{
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:20px;
+    background:rgba(0,212,160,.12);
+    color:var(--accent);
+    font-weight:700;
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    border:1px solid rgba(0,212,160,.35);
+  }
+  .progress-wrap{
+    height:8px;
+    background:var(--border);
+    border-radius:6px;
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .progress-bar{
+    height:100%;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    width:0%;
+    transition:width .35s ease;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:28px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  .qnum{
+    color:var(--accent);
+    font-weight:600;
+    font-size:.85rem;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .question{
+    font-size:1.15rem;
+    line-height:1.5;
+    margin-bottom:22px;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .option{
+    text-align:left;
+    background:#0d1117;
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:14px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:.98rem;
+    transition:all .15s ease;
+  }
+  .option:hover:not(:disabled){
+    border-color:var(--accent);
+    background:#111f1c;
+  }
+  .option.correct{
+    border-color:var(--accent);
+    background:rgba(0,212,160,.15);
+    font-weight:600;
+  }
+  .option.wrong{
+    border-color:var(--wrong);
+    background:rgba(248,81,73,.12);
+  }
+  .option:disabled{
+    cursor:default;
+  }
+  .explain{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:10px;
+    background:#0d1117;
+    border-left:3px solid var(--accent);
+    font-size:.9rem;
+    color:var(--muted);
+    display:none;
+    line-height:1.5;
+  }
+  .explain.show{display:block;}
+  .footer-row{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:22px;
+  }
+  button.next{
+    background:var(--accent);
+    color:#03251c;
+    border:none;
+    padding:11px 22px;
+    border-radius:8px;
+    font-weight:700;
+    cursor:pointer;
+    font-size:.95rem;
+    display:none;
+  }
+  button.next.show{display:inline-block;}
+  button.next:hover{background:var(--accent-dark);}
+  .result{
+    text-align:center;
+  }
+  .result .score{
+    font-size:3rem;
+    font-weight:800;
+    color:var(--accent);
+    margin:10px 0;
+  }
+  .result .msg{
+    color:var(--muted);
+    margin-bottom:14px;
+    font-size:1rem;
+  }
+  .breakdown{
+    text-align:left;
+    background:#0d1117;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:22px;
+    font-size:.88rem;
+  }
+  .breakdown-row{
+    display:flex;
+    justify-content:space-between;
+    padding:4px 0;
+    color:var(--muted);
+  }
+  .breakdown-row b{color:var(--text);}
+  button.restart{
+    background:transparent;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    padding:10px 20px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  button.restart:hover{
+    background:rgba(0,212,160,.1);
+  }
+  footer.build-tag{
+    text-align:center;
+    margin-top:16px;
+    color:var(--muted);
+    font-size:.72rem;
+    letter-spacing:.03em;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-row" id="langSwitch">
+    <button class="lang-btn" data-lang="fr">FR</button>
+    <button class="lang-btn" data-lang="en">EN</button>
+    <button class="lang-btn" data-lang="de">DE</button>
+  </div>
+  <header>
+    <div class="title-row">
+      <h1>⛓ Quiz Alephium</h1>
+      <span class="alpha-badge" id="alphaBadge">Version Alpha</span>
+    </div>
+    <p id="subtitle">Fondamentaux, Powfi & équipe — teste tes connaissances sur ALPH</p>
+  </header>
+  <div class="meta-row">
+    <span id="categoryTag" class="category-tag">Fondamentaux</span>
+    <span id="counter">Question 1 / 19</span>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="card" id="quizCard"></div>
+  <footer class="build-tag" id="buildTag">Quiz communautaire non-officiel — Alpha Version</footer>
+</div>
+
+<script>
+const ui = {
+  fr: {
+    subtitle: "Fondamentaux, Powfi & équipe — teste tes connaissances sur ALPH",
+    alphaBadge: "Version Alpha",
+    buildTag: "Quiz communautaire non-officiel — Alpha Version",
+    question: "Question",
+    finished: "Terminé",
+    resultTag: "Résultat",
+    next: "Suivant →",
+    seeResult: "Voir le résultat →",
+    finalResult: "Résultat final",
+    restart: "Recommencer le quiz",
+    msgPerfect: "Parfait ! Tu maîtrises Alephium, Powfi et son équipe comme un vrai insider 🚀",
+    msgGood: "Très bon score, tu connais bien l'écosystème Alephium 👏",
+    msgOk: "Pas mal, mais quelques révisions sur Powfi ou l'équipe seraient utiles.",
+    msgLow: "C'est un bon début ! N'hésite pas à retenter le quiz pour progresser."
+  },
+  en: {
+    subtitle: "Fundamentals, Powfi & team — test your ALPH knowledge",
+    alphaBadge: "Alpha Version",
+    buildTag: "Unofficial community quiz — Alpha Version",
+    question: "Question",
+    finished: "Done",
+    resultTag: "Result",
+    next: "Next →",
+    seeResult: "See result →",
+    finalResult: "Final result",
+    restart: "Restart the quiz",
+    msgPerfect: "Perfect! You know Alephium, Powfi and its team like a true insider 🚀",
+    msgGood: "Great score, you know the Alephium ecosystem well 👏",
+    msgOk: "Not bad, but a bit more revision on Powfi or the team would help.",
+    msgLow: "That's a good start! Feel free to retake the quiz to improve."
+  },
+  de: {
+    subtitle: "Grundlagen, Powfi & Team — teste dein ALPH-Wissen",
+    alphaBadge: "Alpha-Version",
+    buildTag: "Inoffizielles Community-Quiz — Alpha-Version",
+    question: "Frage",
+    finished: "Fertig",
+    resultTag: "Ergebnis",
+    next: "Weiter →",
+    seeResult: "Ergebnis ansehen →",
+    finalResult: "Endergebnis",
+    restart: "Quiz neu starten",
+    msgPerfect: "Perfekt! Du kennst Alephium, Powfi und das Team wie ein echter Insider 🚀",
+    msgGood: "Sehr gutes Ergebnis, du kennst das Alephium-Ökosystem gut 👏",
+    msgOk: "Nicht schlecht, aber etwas mehr Wiederholung zu Powfi oder dem Team würde helfen.",
+    msgLow: "Das ist ein guter Anfang! Wiederhole das Quiz gerne, um dich zu verbessern."
+  }
+};
+
+const questions = [
+  // --- FONDAMENTAUX / FUNDAMENTALS / GRUNDLAGEN ---
+  {
+    cat: {fr:"Fondamentaux", en:"Fundamentals", de:"Grundlagen"},
+    q: {
+      fr:"Quel type de blockchain est Alephium ?",
+      en:"What type of blockchain is Alephium?",
+      de:"Welche Art von Blockchain ist Alephium?"
+    },
+    options: {
+      fr:["Une sidechain d'Ethereum", "Un layer 1 fragmenté (sharded)", "Une blockchain privée d'entreprise", "Un layer 2 de Bitcoin"],
+      en:["An Ethereum sidechain", "A sharded layer 1", "A private enterprise blockchain", "A Bitcoin layer 2"],
+      de:["Eine Ethereum-Sidechain", "Ein gesharded Layer 1", "Eine private Unternehmens-Blockchain", "Ein Bitcoin-Layer-2"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Alephium est une blockchain layer 1 parallélisée (sharded) qui combine les fondamentaux de Bitcoin avec l'expressivité d'Ethereum.",
+      en:"Alephium is a sharded layer 1 blockchain that combines Bitcoin's fundamentals with Ethereum's expressiveness.",
+      de:"Alephium ist eine gesplittete (sharded) Layer-1-Blockchain, die die Grundlagen von Bitcoin mit der Ausdrucksstärke von Ethereum kombiniert."
+    }
+  },
+  {
+    cat: {fr:"Fondamentaux", en:"Fundamentals", de:"Grundlagen"},
+    q: {
+      fr:"Comment s'appelle l'algorithme de sharding utilisé par Alephium ?",
+      en:"What is the name of the sharding algorithm used by Alephium?",
+      de:"Wie heißt der von Alephium verwendete Sharding-Algorithmus?"
+    },
+    options: {
+      fr:["ShardChain", "BlockFlow", "PolyShard", "SplitDAG"],
+      en:["ShardChain", "BlockFlow", "PolyShard", "SplitDAG"],
+      de:["ShardChain", "BlockFlow", "PolyShard", "SplitDAG"]
+    },
+    correct: 1,
+    explain: {
+      fr:"BlockFlow est l'algorithme de sharding propre à Alephium, combiné à un graphe orienté acyclique (DAG).",
+      en:"BlockFlow is Alephium's proprietary sharding algorithm, combined with a directed acyclic graph (DAG).",
+      de:"BlockFlow ist der eigene Sharding-Algorithmus von Alephium, kombiniert mit einem gerichteten azyklischen Graphen (DAG)."
+    }
+  },
+  {
+    cat: {fr:"Fondamentaux", en:"Fundamentals", de:"Grundlagen"},
+    q: {
+      fr:"Quel mécanisme de consensus utilise Alephium ?",
+      en:"Which consensus mechanism does Alephium use?",
+      de:"Welchen Konsensmechanismus verwendet Alephium?"
+    },
+    options: {
+      fr:["Proof of Stake (PoS)", "Proof of Authority (PoA)", "Proof of Less Work (PoLW)", "Delegated Proof of Stake (DPoS)"],
+      en:["Proof of Stake (PoS)", "Proof of Authority (PoA)", "Proof of Less Work (PoLW)", "Delegated Proof of Stake (DPoS)"],
+      de:["Proof of Stake (PoS)", "Proof of Authority (PoA)", "Proof of Less Work (PoLW)", "Delegated Proof of Stake (DPoS)"]
+    },
+    correct: 2,
+    explain: {
+      fr:"Alephium utilise le Proof of Less Work (PoLW), une variante du Proof of Work qui adapte dynamiquement le travail requis pour miner un bloc.",
+      en:"Alephium uses Proof of Less Work (PoLW), a variant of Proof of Work that dynamically adjusts the work required to mine a block.",
+      de:"Alephium verwendet Proof of Less Work (PoLW), eine Variante von Proof of Work, die den für das Mining eines Blocks erforderlichen Aufwand dynamisch anpasst."
+    }
+  },
+  {
+    cat: {fr:"Fondamentaux", en:"Fundamentals", de:"Grundlagen"},
+    q: {
+      fr:"Quel modèle de gestion des actifs et des smart contracts Alephium utilise-t-il ?",
+      en:"Which model does Alephium use to manage assets and smart contracts?",
+      de:"Welches Modell verwendet Alephium zur Verwaltung von Assets und Smart Contracts?"
+    },
+    options: {
+      fr:["Account model pur (comme Ethereum)", "UTXO pur (comme Bitcoin)", "Le stateful UTXO (sUTXO), combinant UTXO et account model", "Un modèle propriétaire sans lien avec UTXO ou account"],
+      en:["Pure account model (like Ethereum)", "Pure UTXO (like Bitcoin)", "The stateful UTXO (sUTXO), combining UTXO and the account model", "A proprietary model unrelated to UTXO or accounts"],
+      de:["Reines Account-Modell (wie Ethereum)", "Reines UTXO (wie Bitcoin)", "Das Stateful UTXO (sUTXO), eine Kombination aus UTXO und Account-Modell", "Ein proprietäres Modell ohne Bezug zu UTXO oder Accounts"]
+    },
+    correct: 2,
+    explain: {
+      fr:"Alephium combine la sécurité du modèle UTXO pour les actifs avec la flexibilité de l'account model pour les smart contracts : c'est le 'stateful UTXO'.",
+      en:"Alephium combines the security of the UTXO model for assets with the flexibility of the account model for smart contracts: this is the 'stateful UTXO'.",
+      de:"Alephium kombiniert die Sicherheit des UTXO-Modells für Assets mit der Flexibilität des Account-Modells für Smart Contracts: das ist das 'Stateful UTXO'."
+    }
+  },
+  {
+    cat: {fr:"Fondamentaux", en:"Fundamentals", de:"Grundlagen"},
+    q: {
+      fr:"Que devient une transaction en ALPH en termes de frais ?",
+      en:"What happens to transaction fees on Alephium?",
+      de:"Was passiert mit den Transaktionsgebühren bei Alephium?"
+    },
+    options: {
+      fr:["Les frais sont redistribués aux validateurs", "100% des frais de transaction sont brûlés (burn)", "Les frais sont reversés à une fondation", "Il n'y a aucun frais de transaction"],
+      en:["Fees are redistributed to validators", "100% of transaction fees are burned", "Fees are sent to a foundation", "There are no transaction fees"],
+      de:["Die Gebühren werden an Validatoren verteilt", "100% der Transaktionsgebühren werden verbrannt", "Die Gebühren gehen an eine Stiftung", "Es gibt keine Transaktionsgebühren"]
+    },
+    correct: 1,
+    explain: {
+      fr:"100% des frais de transaction sur Alephium sont brûlés, ce qui réduit progressivement l'offre en circulation d'ALPH.",
+      en:"100% of transaction fees on Alephium are burned, which progressively reduces the circulating supply of ALPH.",
+      de:"100% der Transaktionsgebühren bei Alephium werden verbrannt, wodurch das zirkulierende Angebot an ALPH schrittweise reduziert wird."
+    }
+  },
+  {
+    cat: {fr:"Fondamentaux", en:"Fundamentals", de:"Grundlagen"},
+    q: {
+      fr:"Dans quel langage sont écrits les smart contracts d'Alephium ?",
+      en:"In which language are Alephium's smart contracts written?",
+      de:"In welcher Sprache werden die Smart Contracts von Alephium geschrieben?"
+    },
+    options: {
+      fr:["Solidity", "Ralph", "Move", "Rust natif"],
+      en:["Solidity", "Ralph", "Move", "Native Rust"],
+      de:["Solidity", "Ralph", "Move", "Natives Rust"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Ralph est le langage de smart contracts propre à Alephium, conçu pour tirer parti du modèle sUTXO.",
+      en:"Ralph is Alephium's own smart contract language, designed to take full advantage of the sUTXO model.",
+      de:"Ralph ist die eigene Smart-Contract-Sprache von Alephium, die entwickelt wurde, um das sUTXO-Modell optimal zu nutzen."
+    }
+  },
+  {
+    cat: {fr:"Fondamentaux", en:"Fundamentals", de:"Grundlagen"},
+    q: {
+      fr:"En quelle année le mainnet d'Alephium a-t-il été lancé ?",
+      en:"In which year was the Alephium mainnet launched?",
+      de:"In welchem Jahr wurde das Alephium-Mainnet gestartet?"
+    },
+    options: {
+      fr:["2019", "2021", "2023", "2024"],
+      en:["2019", "2021", "2023", "2024"],
+      de:["2019", "2021", "2023", "2024"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Le mainnet d'Alephium a été lancé en 2021, marquant le début de son histoire on-chain.",
+      en:"The Alephium mainnet launched in 2021, marking the start of its on-chain history.",
+      de:"Das Alephium-Mainnet wurde 2021 gestartet und markierte den Beginn seiner On-Chain-Geschichte."
+    }
+  },
+  // --- POWFI ---
+  {
+    cat: {fr:"Powfi", en:"Powfi", de:"Powfi"},
+    q: {
+      fr:"Qu'est-ce que Powfi dans l'écosystème Alephium ?",
+      en:"What is Powfi in the Alephium ecosystem?",
+      de:"Was ist Powfi im Alephium-Ökosystem?"
+    },
+    options: {
+      fr:["Un portefeuille matériel", "Le core dApp / DEX natif d'Alephium", "Un nouveau consensus de minage", "Un explorateur de blocs"],
+      en:["A hardware wallet", "Alephium's native core dApp / DEX", "A new mining consensus", "A block explorer"],
+      de:["Eine Hardware-Wallet", "Die native Core-dApp / DEX von Alephium", "Ein neuer Mining-Konsens", "Ein Block-Explorer"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Powfi est le core dApp d'Alephium : un DEX (CLMM) et une couche de staking pensés comme la brique DeFi centrale de l'écosystème.",
+      en:"Powfi is Alephium's core dApp: a CLMM DEX and staking layer designed as the central DeFi building block of the ecosystem.",
+      de:"Powfi ist die Core-dApp von Alephium: ein CLMM-DEX und eine Staking-Schicht, konzipiert als zentraler DeFi-Baustein des Ökosystems."
+    }
+  },
+  {
+    cat: {fr:"Powfi", en:"Powfi", de:"Powfi"},
+    q: {
+      fr:"Quel type de DEX se trouve au cœur de Powfi ?",
+      en:"What type of DEX is at the heart of Powfi?",
+      de:"Welche Art von DEX bildet den Kern von Powfi?"
+    },
+    options: {
+      fr:["Un order book classique", "Un Concentrated Liquidity Market Maker (CLMM)", "Un AMM à courbe fixe uniquement", "Une plateforme d'échange centralisée"],
+      en:["A classic order book", "A Concentrated Liquidity Market Maker (CLMM)", "A fixed-curve AMM only", "A centralized exchange platform"],
+      de:["Ein klassisches Orderbuch", "Ein Concentrated Liquidity Market Maker (CLMM)", "Nur ein AMM mit fester Kurve", "Eine zentralisierte Handelsplattform"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Powfi repose sur un CLMM (Concentrated Liquidity Market Maker), visant une sécurité et une efficacité en capital de niveau institutionnel.",
+      en:"Powfi is built around a CLMM (Concentrated Liquidity Market Maker), aiming for institutional-grade security and capital efficiency.",
+      de:"Powfi basiert auf einem CLMM (Concentrated Liquidity Market Maker) und zielt auf Sicherheit und Kapitaleffizienz auf institutionellem Niveau ab."
+    }
+  },
+  {
+    cat: {fr:"Powfi", en:"Powfi", de:"Powfi"},
+    q: {
+      fr:"Que fait Powfi avec les frais générés par le trading ?",
+      en:"What does Powfi do with the fees generated by trading?",
+      de:"Was macht Powfi mit den durch den Handel generierten Gebühren?"
+    },
+    options: {
+      fr:["Ils sont entièrement reversés à l'équipe", "50% servent à racheter et brûler de l'ALPH, 50% vont aux stakers", "Ils financent uniquement le marketing", "Ils sont bloqués indéfiniment dans un contrat"],
+      en:["They are fully paid out to the team", "50% buy back and burn ALPH, 50% go to stakers", "They only fund marketing", "They are locked indefinitely in a contract"],
+      de:["Sie werden vollständig an das Team ausgezahlt", "50% werden für Rückkauf und Verbrennung von ALPH verwendet, 50% gehen an Staker", "Sie finanzieren ausschließlich Marketing", "Sie werden dauerhaft in einem Vertrag gesperrt"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Le modèle 'Aligned Economics' de Powfi redirige 50% des frais vers le buyback & burn d'ALPH, et 50% vers les stakers du réseau.",
+      en:"Powfi's 'Aligned Economics' model routes 50% of fees to buy back and burn ALPH, and 50% to network stakers.",
+      de:"Das 'Aligned Economics'-Modell von Powfi leitet 50% der Gebühren in den Rückkauf und die Verbrennung von ALPH und 50% an die Staker des Netzwerks."
+    }
+  },
+  {
+    cat: {fr:"Powfi", en:"Powfi", de:"Powfi"},
+    q: {
+      fr:"Comment s'appelle le token de staking (version wrappée d'ALPH) introduit par Powfi ?",
+      en:"What is the name of the staking token (a wrapped version of ALPH) introduced by Powfi?",
+      de:"Wie heißt der von Powfi eingeführte Staking-Token (eine gewrappte Version von ALPH)?"
+    },
+    options: {
+      fr:["wALPH", "xALPH", "sALPH", "ALPH2"],
+      en:["wALPH", "xALPH", "sALPH", "ALPH2"],
+      de:["wALPH", "xALPH", "sALPH", "ALPH2"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Powfi introduit xALPH, une version wrappée d'ALPH utilisée dans le mécanisme de staking de la plateforme.",
+      en:"Powfi introduces xALPH, a wrapped version of ALPH used in the platform's staking mechanism.",
+      de:"Powfi führt xALPH ein, eine gewrappte Version von ALPH, die im Staking-Mechanismus der Plattform verwendet wird."
+    }
+  },
+  {
+    cat: {fr:"Powfi", en:"Powfi", de:"Powfi"},
+    q: {
+      fr:"Quelle phase de la roadmap d'Alephium le lancement de Powfi initie-t-il ?",
+      en:"Which roadmap phase does the launch of Powfi initiate?",
+      de:"Welche Roadmap-Phase leitet der Start von Powfi ein?"
+    },
+    options: {
+      fr:["Phase One: Genesis", "Phase Two: Aligned Economics", "Phase Three: Mass Adoption", "Phase Zero: Testnet"],
+      en:["Phase One: Genesis", "Phase Two: Aligned Economics", "Phase Three: Mass Adoption", "Phase Zero: Testnet"],
+      de:["Phase One: Genesis", "Phase Two: Aligned Economics", "Phase Three: Mass Adoption", "Phase Zero: Testnet"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Powfi marque le début de la 'Phase Two: Aligned Economics', qui transforme Alephium en écosystème économique auto-soutenu générant des revenus.",
+      en:"Powfi marks the start of 'Phase Two: Aligned Economics', turning Alephium into a self-sustaining, revenue-generating economic ecosystem.",
+      de:"Powfi markiert den Beginn von 'Phase Two: Aligned Economics', die Alephium in ein selbsttragendes, einnahmengenerierendes Wirtschaftsökosystem verwandelt."
+    }
+  },
+  {
+    cat: {fr:"Powfi", en:"Powfi", de:"Powfi"},
+    q: {
+      fr:"Quelle fonctionnalité dope l'accessibilité de Powfi pour les nouveaux utilisateurs ?",
+      en:"Which feature boosts Powfi's accessibility for new users?",
+      de:"Welches Feature verbessert die Zugänglichkeit von Powfi für neue Nutzer?"
+    },
+    options: {
+      fr:["Les fonctionnalités Bridge & Buy pour transférer et acheter des actifs cross-chain", "Un abonnement premium payant", "Un KYC obligatoire pour toute action", "L'absence totale de wallet requis"],
+      en:["The Bridge & Buy features for cross-chain asset transfer and purchase", "A paid premium subscription", "Mandatory KYC for every action", "No wallet needed at all"],
+      de:["Die Bridge- & Buy-Funktionen für den Cross-Chain-Transfer und -Kauf von Assets", "Ein kostenpflichtiges Premium-Abo", "Verpflichtendes KYC für jede Aktion", "Überhaupt keine Wallet erforderlich"]
+    },
+    correct: 0,
+    explain: {
+      fr:"Powfi propose des fonctionnalités Bridge et Buy, permettant de transférer des actifs entre Alephium et d'autres réseaux (comme Ethereum ou BSC) et de faciliter l'entrée dans l'écosystème.",
+      en:"Powfi offers Bridge and Buy features, allowing assets to move between Alephium and other networks (like Ethereum or BSC) and making it easier to enter the ecosystem.",
+      de:"Powfi bietet Bridge- und Buy-Funktionen, mit denen Assets zwischen Alephium und anderen Netzwerken (wie Ethereum oder BSC) übertragen werden können, was den Einstieg in das Ökosystem erleichtert."
+    }
+  },
+  {
+    cat: {fr:"Powfi", en:"Powfi", de:"Powfi"},
+    q: {
+      fr:"Powfi est-il un projet fermé ou open source ?",
+      en:"Is Powfi a closed or open source project?",
+      de:"Ist Powfi ein geschlossenes oder ein Open-Source-Projekt?"
+    },
+    options: {
+      fr:["Totalement fermé et propriétaire", "Fully open source avec des SDKs pour les développeurs", "Open source seulement pour le front-end", "Accessible uniquement sur invitation"],
+      en:["Fully closed and proprietary", "Fully open source with developer SDKs", "Open source only for the front-end", "Invite-only access"],
+      de:["Vollständig geschlossen und proprietär", "Vollständig Open Source mit SDKs für Entwickler", "Open Source nur für das Frontend", "Nur auf Einladung zugänglich"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Powfi est entièrement open source et accompagné de SDKs, pensé comme une brique DeFi composable que d'autres dApps peuvent intégrer.",
+      en:"Powfi is fully open source and comes with SDKs, designed as a composable DeFi building block that other dApps can integrate with.",
+      de:"Powfi ist vollständig Open Source und wird mit SDKs bereitgestellt – konzipiert als komponierbarer DeFi-Baustein, den andere dApps integrieren können."
+    }
+  },
+  // --- ÉQUIPE / TEAM ---
+  {
+    cat: {fr:"Équipe", en:"Team", de:"Team"},
+    q: {
+      fr:"Qui est le fondateur d'Alephium ?",
+      en:"Who is the founder of Alephium?",
+      de:"Wer ist der Gründer von Alephium?"
+    },
+    options: {
+      fr:["Vitalik Buterin", "Cheng Wang", "Charles Hoskinson", "Changpeng Zhao"],
+      en:["Vitalik Buterin", "Cheng Wang", "Charles Hoskinson", "Changpeng Zhao"],
+      de:["Vitalik Buterin", "Cheng Wang", "Charles Hoskinson", "Changpeng Zhao"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Cheng Wang est le fondateur et développeur principal d'Alephium, basé à Lausanne en Suisse.",
+      en:"Cheng Wang is the founder and core developer of Alephium, based in Lausanne, Switzerland.",
+      de:"Cheng Wang ist der Gründer und leitende Entwickler von Alephium, ansässig in Lausanne, Schweiz."
+    }
+  },
+  {
+    cat: {fr:"Équipe", en:"Team", de:"Team"},
+    q: {
+      fr:"Quel bagage technique Cheng Wang apporte-t-il au projet ?",
+      en:"What technical background does Cheng Wang bring to the project?",
+      de:"Welchen technischen Hintergrund bringt Cheng Wang in das Projekt ein?"
+    },
+    options: {
+      fr:["Aucune expérience technique, profil purement business", "Un parcours en informatique distribuée, avec passage par l'EPFL et Swisscom", "Une carrière exclusivement dans la finance traditionnelle", "Un parcours en design graphique"],
+      en:["No technical experience, a purely business profile", "A background in distributed computing, including time at EPFL and Swisscom", "A career exclusively in traditional finance", "A background in graphic design"],
+      de:["Keine technische Erfahrung, ein rein geschäftliches Profil", "Einen Hintergrund in verteilten Systemen, u.a. bei der EPFL und Swisscom", "Eine Karriere ausschließlich im traditionellen Finanzwesen", "Einen Hintergrund im Grafikdesign"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Cheng Wang a un solide bagage en calcul distribué, avec une expérience chez Swisscom, BestMile, et un parcours académique lié à l'EPFL, ce qui nourrit la rigueur technique d'Alephium.",
+      en:"Cheng Wang has a strong background in distributed computing, with experience at Swisscom, BestMile, and academic ties to EPFL, which feeds Alephium's technical rigor.",
+      de:"Cheng Wang verfügt über einen fundierten Hintergrund in verteilten Systemen, mit Erfahrung bei Swisscom, BestMile und akademischen Verbindungen zur EPFL, was die technische Sorgfalt von Alephium prägt."
+    }
+  },
+  {
+    cat: {fr:"Équipe", en:"Team", de:"Team"},
+    q: {
+      fr:"Quel est le rôle de Maud Bannwart au sein d'Alephium ?",
+      en:"What is Maud Bannwart's role at Alephium?",
+      de:"Welche Rolle hat Maud Bannwart bei Alephium?"
+    },
+    options: {
+      fr:["CTO", "COO (Chief Operating Officer)", "Auditrice externe", "Community manager junior"],
+      en:["CTO", "COO (Chief Operating Officer)", "External auditor", "Junior community manager"],
+      de:["CTO", "COO (Chief Operating Officer)", "Externe Prüferin", "Junior Community Manager"]
+    },
+    correct: 1,
+    explain: {
+      fr:"Maud Bannwart est la COO d'Alephium : elle pilote les opérations, la stratégie, l'engagement communautaire et la croissance du projet depuis 2021.",
+      en:"Maud Bannwart is Alephium's COO: she drives operations, strategy, community engagement and the project's growth since 2021.",
+      de:"Maud Bannwart ist die COO von Alephium: Sie leitet seit 2021 den Betrieb, die Strategie, das Community-Engagement und das Wachstum des Projekts."
+    }
+  },
+  {
+    cat: {fr:"Équipe", en:"Team", de:"Team"},
+    q: {
+      fr:"Quelle qualité ressort du parcours de Maud Bannwart avant Alephium ?",
+      en:"What quality stands out from Maud Bannwart's career before Alephium?",
+      de:"Welche Qualität zeichnet Maud Bannwarts Werdegang vor Alephium aus?"
+    },
+    options: {
+      fr:["Une expérience polyvalente (RH, legal, relations investisseurs, produit) chez le broker crypto Lykke", "Aucune expérience professionnelle avant Alephium", "Un parcours uniquement académique en physique", "Une carrière de trader haute fréquence"],
+      en:["Versatile experience (HR, legal, investor relations, product) at crypto broker Lykke", "No professional experience before Alephium", "A purely academic background in physics", "A career as a high-frequency trader"],
+      de:["Vielseitige Erfahrung (HR, Recht, Investor Relations, Produkt) beim Krypto-Broker Lykke", "Keine Berufserfahrung vor Alephium", "Ein rein akademischer Werdegang in Physik", "Eine Karriere als Hochfrequenzhändlerin"]
+    },
+    correct: 0,
+    explain: {
+      fr:"Avant Alephium, Maud a occupé de multiples casquettes (RH, aspects légaux, relations investisseurs, produit) chez le broker crypto suisse Lykke, ce qui en fait un profil opérationnel très complet.",
+      en:"Before Alephium, Maud wore multiple hats (HR, legal matters, investor relations, product) at the Swiss crypto broker Lykke, making her a highly well-rounded operational profile.",
+      de:"Vor Alephium übernahm Maud beim Schweizer Krypto-Broker Lykke mehrere Rollen (HR, rechtliche Aspekte, Investor Relations, Produkt), was sie zu einem äußerst vielseitigen operativen Profil macht."
+    }
+  },
+  {
+    cat: {fr:"Équipe", en:"Team", de:"Team"},
+    q: {
+      fr:"Quelle approche l'équipe cœur d'Alephium privilégie-t-elle pour livrer un produit comme Powfi ?",
+      en:"What approach does Alephium's core team favor when shipping a product like Powfi?",
+      de:"Welchen Ansatz bevorzugt das Kernteam von Alephium bei der Bereitstellung eines Produkts wie Powfi?"
+    },
+    options: {
+      fr:["Le prototypage rapide et la mise en production sans tests", "Une phase de tests approfondis avant toute exposition publique ('battle-tested')", "Le lancement direct en mainnet sans testnet", "La sous-traitance complète du développement"],
+      en:["Rapid prototyping and shipping to production without testing", "An extensive testing phase before any public exposure ('battle-tested')", "Launching straight to mainnet without a testnet", "Fully outsourcing development"],
+      de:["Schnelles Prototyping und Produktivsetzung ohne Tests", "Eine umfangreiche Testphase vor jeder öffentlichen Exposition ('battle-tested')", "Direkter Start im Mainnet ohne Testnet", "Vollständige Auslagerung der Entwicklung"]
+    },
+    correct: 1,
+    explain: {
+      fr:"L'équipe a passé plusieurs mois à tester et sécuriser les contrats de Powfi avant l'ouverture publique, privilégiant la robustesse à la rapidité de mise sur le marché.",
+      en:"The team spent several months testing and hardening Powfi's contracts before the public launch, prioritizing robustness over speed to market.",
+      de:"Das Team verbrachte mehrere Monate damit, die Verträge von Powfi vor der öffentlichen Einführung zu testen und abzusichern, wobei Robustheit Vorrang vor schneller Markteinführung hatte."
+    }
+  }
+];
+
+let lang = 'fr';
+let current = 0;
+let score = 0;
+const answersLog = [];
+const quizCard = document.getElementById('quizCard');
+const progressBar = document.getElementById('progressBar');
+const categoryTag = document.getElementById('categoryTag');
+const counter = document.getElementById('counter');
+const subtitle = document.getElementById('subtitle');
+const alphaBadge = document.getElementById('alphaBadge');
+const buildTag = document.getElementById('buildTag');
+
+function applyLangUI(){
+  const t = ui[lang];
+  subtitle.textContent = t.subtitle;
+  alphaBadge.textContent = t.alphaBadge;
+  buildTag.textContent = t.buildTag;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+}
+
+document.getElementById('langSwitch').addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-btn');
+  if(!btn) return;
+  lang = btn.dataset.lang;
+  applyLangUI();
+  if(current < questions.length){
+    renderQuestion();
+  } else {
+    renderResult();
+  }
+});
+
+function renderQuestion(){
+  const t = ui[lang];
+  const item = questions[current];
+  progressBar.style.width = (current / questions.length * 100) + '%';
+  categoryTag.textContent = item.cat[lang];
+  counter.textContent = `${t.question} ${current + 1} / ${questions.length}`;
+
+  quizCard.innerHTML = `
+    <div class="qnum">${item.cat[lang]}</div>
+    <div class="question">${item.q[lang]}</div>
+    <div class="options" id="options"></div>
+    <div class="explain" id="explain">${item.explain[lang]}</div>
+    <div class="footer-row"><button class="next" id="nextBtn">${t.next}</button></div>
+  `;
+
+  const optionsWrap = document.getElementById('options');
+  item.options[lang].forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.onclick = () => selectAnswer(idx);
+    optionsWrap.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx){
+  const t = ui[lang];
+  const item = questions[current];
+  const buttons = document.querySelectorAll('.option');
+  buttons.forEach(b => b.disabled = true);
+
+  const isCorrect = idx === item.correct;
+  if(isCorrect){
+    buttons[idx].classList.add('correct');
+    score++;
+  } else {
+    buttons[idx].classList.add('wrong');
+    buttons[item.correct].classList.add('correct');
+  }
+  answersLog.push({ cat: item.cat, correct: isCorrect });
+
+  document.getElementById('explain').classList.add('show');
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.classList.add('show');
+  nextBtn.textContent = current === questions.length - 1 ? t.seeResult : t.next;
+  nextBtn.onclick = () => {
+    current++;
+    if(current < questions.length){
+      renderQuestion();
+    } else {
+      renderResult();
+    }
+  };
+}
+
+function renderResult(){
+  const t = ui[lang];
+  progressBar.style.width = '100%';
+  counter.textContent = t.finished;
+  categoryTag.textContent = t.resultTag;
+  const pct = Math.round(score / questions.length * 100);
+  let msg;
+  if(pct === 100) msg = t.msgPerfect;
+  else if(pct >= 70) msg = t.msgGood;
+  else if(pct >= 40) msg = t.msgOk;
+  else msg = t.msgLow;
+
+  const categories = [...new Set(questions.map(q => q.cat[lang]))];
+  const breakdownRows = categories.map(catLabel => {
+    const total = answersLog.filter(a => a.cat[lang] === catLabel).length;
+    const good = answersLog.filter(a => a.cat[lang] === catLabel && a.correct).length;
+    return `<div class="breakdown-row"><span>${catLabel}</span><b>${good} / ${total}</b></div>`;
+  }).join('');
+
+  quizCard.innerHTML = `
+    <div class="result">
+      <div class="qnum">${t.finalResult}</div>
+      <div class="score">${score} / ${questions.length}</div>
+      <div class="msg">${msg}</div>
+      <div class="breakdown">${breakdownRows}</div>
+      <button class="restart" id="restartBtn">${t.restart}</button>
+    </div>
+  `;
+  document.getElementById('restartBtn').onclick = () => {
+    current = 0;
+    score = 0;
+    answersLog.length = 0;
+    renderQuestion();
+  };
+}
+
+applyLangUI();
+renderQuestion();
+</script>
+</body>
+</html>
